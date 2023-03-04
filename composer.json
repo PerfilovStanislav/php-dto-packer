@@ -1,0 +1,32 @@
+{
+  "name": "perfilov/php-dto-packer",
+  "description": "Convert array, json, objects into a strongly-typed values (and back) for transferring throw services",
+  "license": "MIT",
+  "keywords": [
+    "dto", "serializer", "packer", "json", "data-transfer-object", "tree", "mapper", "mapping", "array", "conversion",
+    "decode", "encode"
+  ],
+  "type": "library",
+  "version": "3.0.0",
+  "time": "2023-03-02",
+  "default-branch": true,
+  "authors": [
+    {
+      "name": "Perfilov Stanislav",
+      "email": "stanislav.perfilov@gmail.com",
+      "homepage": "https://perfilovstanislav.t.me",
+      "role": "developer"
+    }
+  ],
+  "homepage": "https://t.me/phpdto",
+  "require": {
+    "php": ">=8.1"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "DtoPacker\\": "src/"
+    }
+  }
+}
