@@ -96,3 +96,6 @@ Output: {"surname":"Perfilov","persons":[{"name":"Stanislav","birthday":"1987-12
 ```php
 $family = new Family($json);
 ```
+
+### Benchmark
+<img width="746" alt="image" src="https://raw.githubusercontent.com/PerfilovStanislav/php-dto-benchmark/main/dto-benchmark.gif">
