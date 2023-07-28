@@ -4,10 +4,10 @@
   "license": "MIT",
   "keywords": [
     "dto", "serializer", "packer", "json", "data-transfer-object", "tree", "mapper", "mapping", "array", "conversion",
-    "decode", "encode"
+    "decode", "encode", "hydrator"
   ],
   "type": "library",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "time": "2023-03-02",
   "default-branch": true,
   "authors": [

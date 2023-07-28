@@ -19,15 +19,17 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         ];
 
     private const
-        TYPE_INT        = 'int',
-        TYPE_STRING     = 'string',
-        TYPE_FLOAT      = 'float',
-        TYPE_BOOL       = 'bool',
-        TYPE_ARRAY      = 'array',
-        TYPE_MIXED      = 'mixed',
-        TYPE_OBJECT     = 'object',
-        TYPE_NULL       = 'null',
-        TYPE_DATETIME   = 'DateTime';
+        TYPE_INT                    = 'int',
+        TYPE_STRING                 = 'string',
+        TYPE_FLOAT                  = 'float',
+        TYPE_BOOL                   = 'bool',
+        TYPE_ARRAY                  = 'array',
+        TYPE_MIXED                  = 'mixed',
+        TYPE_OBJECT                 = 'object',
+        TYPE_NULL                   = 'null',
+        TYPE_DATETIME               = 'DateTime',
+        TYPE_DATETIME_IMMUTABLE     = 'DateTimeImmutable',
+        TYPE_DATETIME_INTERFACE     = 'DateTimeInterface';
 
     protected const IS_SCALAR_TYPES =  [
         self::TYPE_INT    => true,
@@ -36,6 +38,12 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         self::TYPE_BOOL   => true,
         self::TYPE_ARRAY  => true,
         self::TYPE_MIXED  => true,
+    ];
+
+    protected const DATETIME_CLASSES =  [
+        self::TYPE_DATETIME             => \DateTime::class,
+        self::TYPE_DATETIME_IMMUTABLE   => \DateTimeImmutable::class,
+        self::TYPE_DATETIME_INTERFACE   => \DateTimeImmutable::class,
     ];
 
     private static array $_cache = [];
@@ -194,12 +202,13 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromDatetime(mixed $value, string $key)
+    protected function fromDatetime(mixed $value, string $key, string $class)
     {
         if (\is_object($value) || $value === null) {
             $this->{$key} = $value;
         } else {
-            $this->{$key} = \DateTime::createFromFormat(\DateTimeInterface::ATOM, $value);
+            /** @var \DateTimeInterface $class */
+            $this->{$key} = $class::createFromFormat(\DateTimeInterface::ATOM, $value);
         }
     }
 
@@ -232,7 +241,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function fromDtos(array $data, ?array &$link, string $class)
-	{
+    {
         foreach ($data as $i => $value) {
             if ($value instanceof PackableInterface) {
                 $link[] = $value;
@@ -245,7 +254,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function fromBackedEnums(array $data, ?array &$link, string $class)
-	{
+    {
         foreach ($data as $i => $value) {
             /** @var \BackedEnum $class */
             if (\is_object($value)) {
@@ -259,7 +268,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function fromUnitEnums(array $data, ?array &$link, string $class)
-	{
+    {
         foreach ($data as $i => $value) {
             if ($value instanceof $class) {
                 $link[] = $value;
@@ -272,7 +281,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function fromScalars(array $data, ?array &$link, $fn)
-	{
+    {
         foreach ($data as $i => $value) {
             if (\is_scalar($value)) {
                 $link = self::$fn(...$data);
@@ -284,7 +293,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function fromObjects(array $data, ?array &$link)
-	{
+    {
         foreach ($data as $i => $value) {
             if (\is_object($value)) {
                 $link[] = $value;
@@ -296,15 +305,16 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromDatetimes(array $data, ?array &$link)
-	{
+    protected function fromDatetimes(array $data, ?array &$link, string $class)
+    {
         foreach ($data as $i => $value) {
             if ($value instanceof \DateTimeInterface) {
                 $link[] = $value;
             } else if (\is_scalar($value)) {
-                $link[] = \DateTime::createFromFormat(\DateTimeInterface::ATOM, $value);
+                /** @var \DateTimeInterface $class */
+                $link[] = $class::createFromFormat(\DateTimeInterface::ATOM, $value);
             } else {
-                $this->fromDatetimes($value, $link[$i]);
+                $this->fromDatetimes($value, $link[$i], $class);
             }
         }
     }
@@ -340,7 +350,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function toDtos(?array &$link, array $data)
-	{
+    {
         foreach ($data as $i => $value) {
             if ($value instanceof PackableInterface) {
                 $link[$i] = $value->toArray();
@@ -351,7 +361,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function toBackedEnums(?array &$link, array $data)
-	{
+    {
         foreach ($data as $i => $value) {
             if ($value instanceof \BackedEnum) {
                 $link[$i] = $value->value;
@@ -362,7 +372,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function toUnitEnums(?array &$link, array $data)
-	{
+    {
         foreach ($data as $i => $value) {
             if ($value instanceof \UnitEnum) {
                 $link[$i] = $value->name;
@@ -373,7 +383,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     }
 
     protected function toObjects(?array &$link, array $data)
-	{
+    {
         foreach ($data as $i => $value) {
             if (\is_object($value)) {
                 $link[$i] = (array)$value;
@@ -456,28 +466,28 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
             if ($reflectionType instanceof \ReflectionNamedType) {
                 $type = $reflectionType->getName();
                 if (self::IS_SCALAR_TYPES[$type] ?? false) {
-                    $_cache[self::HANDLERS_FROM][$key] = ["fromScalar", null];
-                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toScalar";
+                    $_cache[self::HANDLERS_FROM][$key] = ["fromScalar", null];                                          /** @see fromScalar */
+                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toScalar";                                                /** @see toScalar */
                 } else if ($type === self::TYPE_OBJECT) {
-                    $_cache[self::HANDLERS_FROM][$key] = ["fromObject", null];
-                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toObject";
-                } else if ($type === self::TYPE_DATETIME) {
-                    $_cache[self::HANDLERS_FROM][$key] = ["fromDatetime", null];
-                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDatetime";
+                    $_cache[self::HANDLERS_FROM][$key] = ["fromObject", null];                                          /** @see fromObject */
+                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toObject";                                                /** @see toObject */
+                } else if (($dt = self::DATETIME_CLASSES[$type] ?? false) !== false) {
+                    $_cache[self::HANDLERS_FROM][$key] = ["fromDatetime", $dt];                                         /** @see fromDatetime */
+                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDatetime";                                              /** @see toDatetime */
                 } else {
                     if ($property->isProtected() === false) {
                         throw new \RuntimeException(static::class . "::$key must be protected");
                     }
                     $variableType = new \ReflectionClass($type);
                     if ($variableType->implementsInterface(PackableInterface::class)) {
-                        $_cache[self::HANDLERS_FROM][$key] = ["fromDto", $type];
-                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDto";
+                        $_cache[self::HANDLERS_FROM][$key] = ["fromDto", $type];                                        /** @see fromDto */
+                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDto";                                               /** @see toDto */
                     } else if ($variableType->implementsInterface(\BackedEnum::class)) {
-                        $_cache[self::HANDLERS_FROM][$key] = ["fromBackedEnum", $type];
-                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toBackedEnum";
+                        $_cache[self::HANDLERS_FROM][$key] = ["fromBackedEnum", $type];                                 /** @see fromBackedEnum */
+                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toBackedEnum";                                        /** @see toBackedEnum */
                     }  else if ($variableType->implementsInterface(\UnitEnum::class)) {
-                        $_cache[self::HANDLERS_FROM][$key] = ["fromUnitEnum", $type];
-                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toUnitEnum";
+                        $_cache[self::HANDLERS_FROM][$key] = ["fromUnitEnum", $type];                                   /** @see fromUnitEnum */
+                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toUnitEnum";                                          /** @see toUnitEnum */
                     }
                 }
             } else if ($reflectionType instanceof \ReflectionUnionType) {
@@ -502,26 +512,26 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
                 }
 
                 if (self::IS_SCALAR_TYPES[$type] ?? false) {
-                    $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromScalars", "{$type}s"];
-                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toScalar";
+                    $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromScalars", "{$type}s"];                           /** @see fromScalars *//** @see ints *//** @see strings *//** @see bools *//** @see floats */
+                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toScalar";                                                /** @see toScalar */
                 } else if ($type === self::TYPE_OBJECT) {
-                    $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromObjects", null];
-                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toObjects";
-                } else if ($type === self::TYPE_DATETIME) {
-                    $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromDatetimes", null];
-                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDatetimes";
+                    $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromObjects", null];                                 /** @see fromObjects */
+                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toObjects";                                               /** @see toObjects */
+                } else if (($dt = self::DATETIME_CLASSES[$type] ?? false) !== false) {
+                    $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromDatetimes", $dt];                                /** @see fromDatetimes */
+                    $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDatetimes";                                             /** @see toDatetimes */
                 } else {
                     $variableType = new \ReflectionClass($type);
                     if ($variableType->implementsInterface(PackableInterface::class)) {
-                        $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromDtos", $type];
-                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDtos";
+                        $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromDtos", $type];                               /** @see fromDtos */
+                        $_cache[self::HANDLERS_TO_ARRAY][$key] = "toDtos";                                              /** @see toDtos */
                     } else if ($variableType->implementsInterface(\UnitEnum::class)) {
                         if ($variableType->implementsInterface(\BackedEnum::class)) {
-                            $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromBackedEnums", $type];
-                            $_cache[self::HANDLERS_TO_ARRAY][$key] = "toBackedEnums";
+                            $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromBackedEnums", $type];                    /** @see fromBackedEnums */
+                            $_cache[self::HANDLERS_TO_ARRAY][$key] = "toBackedEnums";                                   /** @see toBackedEnums */
                         } else {
-                            $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromUnitEnums", $type];
-                            $_cache[self::HANDLERS_TO_ARRAY][$key] = "toUnitEnums";
+                            $_cache[self::HANDLERS_VECTORS_FROM][$key] = ["fromUnitEnums", $type];                      /** @see fromUnitEnums */
+                            $_cache[self::HANDLERS_TO_ARRAY][$key] = "toUnitEnums";                                     /** @see toUnitEnums */
                         }
                     } else {
                         throw new \RuntimeException(static::class . "::$key unhandled type: $type");
