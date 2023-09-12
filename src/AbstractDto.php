@@ -65,8 +65,8 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
 
         $vars = \get_object_vars($this);
         foreach ($vars as $key => $val) {
-            if ($val === null) {
-                $result[$key] = null;
+            if (empty($val)) {
+                $result[$key] = $val;
             } else {
                 $this->{$types[$key]}($result[$key], $val);
             }
