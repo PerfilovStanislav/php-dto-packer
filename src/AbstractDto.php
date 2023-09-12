@@ -65,8 +65,8 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
 
         $vars = \get_object_vars($this);
         foreach ($vars as $key => $val) {
-            if (empty($val)) {
-                $result[$key] = $val;
+            if ($val === null) {
+                $result[$key] = null;
             } else {
                 $this->{$types[$key]}($result[$key], $val);
             }
@@ -243,7 +243,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     protected function fromDtos(array $data, ?array &$link, string $class)
     {
         foreach ($data as $i => $value) {
-            if ($value instanceof PackableInterface) {
+            if ($value instanceof PackableInterface || empty($value)) {
                 $link[] = $value;
             } else if (\array_is_list($value)) {
                 $this->fromDtos($value, $link[$i], $class);
@@ -351,6 +351,10 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
 
     protected function toDtos(?array &$link, array $data)
     {
+        if (empty($data)) {
+            $link = [];
+            return;
+        }
         foreach ($data as $i => $value) {
             if ($value instanceof PackableInterface) {
                 $link[$i] = $value->toArray();
