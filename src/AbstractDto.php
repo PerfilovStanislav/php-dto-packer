@@ -6,12 +6,11 @@ namespace DtoPacker;
 abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Stringable, \ArrayAccess
 {
     protected const
-        CACHE_DIR = "/cache";
-
-    protected const
         HANDLERS_FROM           = 1,
         HANDLERS_VECTORS_FROM   = 2,
-        HANDLERS_TO_ARRAY       = 3,
+        HANDLERS_TO_ARRAY       = 3;
+
+    protected const
         CACHE = [
             self::HANDLERS_FROM         => [],
             self::HANDLERS_VECTORS_FROM => [],
@@ -50,7 +49,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
 
     public function __construct(string|array $data)
     {
-        self::$_cache[static::class] ??= $this->loadProperties();
+        self::$_cache[static::class] ??= $this->getProperties();
 
         if (\is_string($data)) {
             $data = \json_decode($data, true);
@@ -79,16 +78,16 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     {
         $types = self::$_cache[static::class];
 
-        foreach ($types[self::HANDLERS_FROM] as $key => list($fn, $arg)) {
+        foreach ($types[self::HANDLERS_FROM] as $key => [$fn, $arg]) {
             if (\array_key_exists($key, $data)) {
-                self::$fn($data[$key], $key, $arg);
+                $this->$fn($data[$key], $key, $arg);
             }
         }
 
-        foreach ($types[self::HANDLERS_VECTORS_FROM] as $key => list($fn, $arg)) {
+        foreach ($types[self::HANDLERS_VECTORS_FROM] as $key => [$fn, $arg]) {
             if (($data[$key] ?? null) !== null) {
                 $this->{$key} = [];
-                self::$fn($data[$key], $this->{$key}, $arg);
+                $this->$fn($data[$key], $this->{$key}, $arg);
             } else if (\array_key_exists($key, $data)) {
                 $this->{$key} = null;
             }
@@ -133,8 +132,12 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         $this->fromArray([$name => $value]);
     }
 
-    public function &__get(string $name)
+    public function &__get(string $name): mixed
     {
+        if (isset($this->{$name}) === false) {
+            $this->fromArray([$name => []]);
+        }
+
         return $this->{$name};
     }
 
@@ -188,12 +191,12 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromScalar(mixed $value, string $key)
+    protected function fromScalar(mixed $value, string $key): void
     {
         $this->{$key} = $value;
     }
 
-    protected function fromObject(mixed $value, string $key)
+    protected function fromObject(mixed $value, string $key): void
     {
         if (\is_object($value) || $value === null) {
             $this->{$key} = $value;
@@ -202,7 +205,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromDatetime(mixed $value, string $key, string $class)
+    protected function fromDatetime(mixed $value, string $key, string $class): void
     {
         if (\is_object($value) || $value === null) {
             $this->{$key} = $value;
@@ -212,7 +215,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromDto(mixed $value, string $key, string $class)
+    protected function fromDto(mixed $value, string $key, string $class): void
     {
         if ($value instanceof $class || $value === null) {
             $this->{$key} = $value;
@@ -221,7 +224,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromBackedEnum(mixed $value, string $key, string $class)
+    protected function fromBackedEnum(mixed $value, string $key, string $class): void
     {
         if (\is_object($value) || $value === null) {
             $this->{$key} = $value;
@@ -231,7 +234,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromUnitEnum(mixed $value, string $key, string $class)
+    protected function fromUnitEnum(mixed $value, string $key, string $class): void
     {
         if (\is_object($value) || $value === null) {
             $this->{$key} = $value;
@@ -240,7 +243,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromDtos(array $data, ?array &$link, string $class)
+    protected function fromDtos(array $data, ?array &$link, string $class): void
     {
         foreach ($data as $i => $value) {
             if ($value instanceof PackableInterface || empty($value)) {
@@ -253,7 +256,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromBackedEnums(array $data, ?array &$link, string $class)
+    protected function fromBackedEnums(array $data, ?array &$link, string $class): void
     {
         foreach ($data as $i => $value) {
             /** @var \BackedEnum $class */
@@ -267,7 +270,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromUnitEnums(array $data, ?array &$link, string $class)
+    protected function fromUnitEnums(array $data, ?array &$link, string $class): void
     {
         foreach ($data as $i => $value) {
             if ($value instanceof $class) {
@@ -280,11 +283,11 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromScalars(array $data, ?array &$link, $fn)
+    protected function fromScalars(array $data, ?array &$link, $fn): void
     {
         foreach ($data as $i => $value) {
             if (\is_scalar($value)) {
-                $link = self::$fn(...$data);
+                $link = $this->$fn(...$data);
                 return;
             } else {
                 $this->fromScalars($value, $link[$i], $fn);
@@ -292,7 +295,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromObjects(array $data, ?array &$link)
+    protected function fromObjects(array $data, ?array &$link): void
     {
         foreach ($data as $i => $value) {
             if (\is_object($value)) {
@@ -305,7 +308,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function fromDatetimes(array $data, ?array &$link, string $class)
+    protected function fromDatetimes(array $data, ?array &$link, string $class): void
     {
         foreach ($data as $i => $value) {
             if ($value instanceof \DateTimeInterface) {
@@ -319,37 +322,37 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function toScalar(?array &$link, mixed $value)
+    protected function toScalar(?array &$link, mixed $value): void
     {
-        return $link = $value;
+        $link = $value;
     }
 
-    protected function toBackedEnum(?array &$link, \BackedEnum $value): int|string
+    protected function toBackedEnum(?array &$link, \BackedEnum $value): void
     {
-        return $link = $value->value;
+        $link = $value->value;
     }
 
-    protected function toUnitEnum(?array &$link, mixed $value)
+    protected function toUnitEnum(?array &$link, mixed $value): void
     {
-        return $link = $value->name;
+        $link = $value->name;
     }
 
-    protected function toDto(?array &$link, mixed $value)
+    protected function toDto(?array &$link, mixed $value): void
     {
-        return $link = $value->toArray();
+        $link = $value->toArray();
     }
 
-    protected function toDatetime(?array &$link, \DateTimeInterface $value)
+    protected function toDatetime(?array &$link, \DateTimeInterface $value): void
     {
-        return $link = $value->format(\DateTimeInterface::ATOM);
+        $link = $value->format(\DateTimeInterface::ATOM);
     }
 
-    protected function toObject(?array &$link, Object $value)
+    protected function toObject(?array &$link, Object $value): void
     {
-        return $link = (array)$value;
+        $link = (array)$value;
     }
 
-    protected function toDtos(?array &$link, array $data)
+    protected function toDtos(?array &$link, array $data): void
     {
         if (empty($data)) {
             $link = [];
@@ -364,7 +367,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function toBackedEnums(?array &$link, array $data)
+    protected function toBackedEnums(?array &$link, array $data): void
     {
         foreach ($data as $i => $value) {
             if ($value instanceof \BackedEnum) {
@@ -375,7 +378,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function toUnitEnums(?array &$link, array $data)
+    protected function toUnitEnums(?array &$link, array $data): void
     {
         foreach ($data as $i => $value) {
             if ($value instanceof \UnitEnum) {
@@ -386,7 +389,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function toObjects(?array &$link, array $data)
+    protected function toObjects(?array &$link, array $data): void
     {
         foreach ($data as $i => $value) {
             if (\is_object($value)) {
@@ -397,7 +400,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function toDatetimes(?array &$link, array $data)
+    protected function toDatetimes(?array &$link, array $data): void
     {
         foreach ($data as $i => $value) {
             if ($value instanceof \DateTimeInterface) {
@@ -408,54 +411,13 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         }
     }
 
-    protected function ints(int ...$v) { return $v; }
+    protected function ints(int ...$v): array { return $v; }
 
-    protected function strings(string ...$v) { return $v; }
+    protected function strings(string ...$v): array { return $v; }
 
-    protected function bools(bool ...$v) { return $v; }
+    protected function bools(bool ...$v): array { return $v; }
 
-    protected function floats(float ...$v) { return $v; }
-
-    protected function loadProperties()
-    {
-        $cacheDir = ($cwd = \getcwd()) . self::CACHE_DIR;
-
-        $absoluteFilename = (new \ReflectionClass($this))->getFileName();
-        $filemtime = \filemtime($absoluteFilename);
-        $cacheFilename = "$cacheDir/$filemtime" . \substr($absoluteFilename, \strlen($cwd));
-
-        if (\is_file($cacheFilename)) {
-            return require_once $cacheFilename;
-        } elseif (\is_dir($cacheDir) === false) {
-            \mkdir($cacheDir, 0755, true);
-            \file_put_contents("$cacheDir/.gitignore", "*\n", FILE_APPEND);
-        }
-
-        $properties = $this->getProperties();
-
-        $props = "";
-        foreach ($properties as $i => $vars) {
-            $val = "";
-            foreach ($vars as $key => $var) {
-                $val .= "\n\t\t";
-                if (\is_array($var)) {
-                    $val .= "\"$key\" => [\"$var[0]\", " . ($var[1] === null ? "null" : "\"$var[1]\"") . "],";
-                } else {
-                    $val .= "\"$key\" => \"$var\",";
-                }
-            }
-            $props .= "\n\t$i => [$val\n\t],";
-        }
-        $template = "<?php \nreturn [$props\n];";
-
-        $dir = \dirname($cacheFilename);
-        if (\is_dir($dir) === false) {
-            \mkdir(\dirname($cacheFilename), 0755, true);
-        }
-        \file_put_contents($cacheFilename, $template, FILE_APPEND | LOCK_EX | FILE_NO_DEFAULT_CONTEXT);
-
-        return $properties;
-    }
+    protected function floats(float ...$v): array { return $v; }
 
     protected function getProperties(): array
     {
@@ -549,7 +511,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         return $_cache;
     }
 
-    protected function clone(?array &$link, array $data, array &$objects)
+    protected function clone(?array &$link, array $data, array &$objects): void
     {
         foreach ($data as $i => $value) {
             if (\is_object($value) && ($value instanceof \UnitEnum) === false) {

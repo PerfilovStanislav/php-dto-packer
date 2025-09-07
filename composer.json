@@ -1,13 +1,14 @@
 {
   "name": "perfilov/php-dto-packer",
-  "description": "Convert array, json, objects into a strongly-typed values (and back) for transferring throw services",
+  "description": "Blazing-fast PHP library to convert arrays, JSON & objects into strongly typed DTOs (and back)",
   "license": "MIT",
   "keywords": [
-    "dto", "serializer", "packer", "json", "data-transfer-object", "tree", "mapper", "mapping", "array", "conversion",
-    "decode", "encode", "hydrator"
+    "dto", "serializer", "deserializer", "packer", "json", "data-transfer-object", "tree", "mapper", "mapping", "array",
+    "conversion", "decode", "encode", "hydrator", "object-mapper", "type-safe", "strongly-typed", "value-object",
+    "object-conversion","fast", "performance", "lightweight", "php"
   ],
   "type": "library",
-  "version": "4.0.3",
+  "version": "5.0.0",
   "time": "2023-03-02",
   "default-branch": true,
   "authors": [

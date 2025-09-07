@@ -98,4 +98,6 @@ $family = new Family($json);
 ```
 
 ### Benchmark
+Check out the [benchmark](https://github.com/PerfilovStanislav/php-dto-benchmark) comparison of popular libraries
+
 <img width="746" alt="image" src="https://raw.githubusercontent.com/PerfilovStanislav/php-dto-benchmark/main/dto-benchmark.gif">
