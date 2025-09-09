@@ -8,14 +8,14 @@
     "object-conversion","fast", "performance", "lightweight", "php"
   ],
   "type": "library",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "time": "2023-03-02",
   "default-branch": true,
   "authors": [
     {
       "name": "Perfilov Stanislav",
       "email": "stanislav.perfilov@gmail.com",
-      "homepage": "https://perfilovstanislav.t.me",
+      "homepage": "https://beacons.ai/stanislavperfilov",
       "role": "developer"
     }
   ],

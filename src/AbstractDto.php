@@ -6,15 +6,18 @@ namespace DtoPacker;
 abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Stringable, \ArrayAccess
 {
     protected const
-        HANDLERS_FROM           = 1,
-        HANDLERS_VECTORS_FROM   = 2,
-        HANDLERS_TO_ARRAY       = 3;
+          HANDLERS_FROM           = 1
+        , HANDLERS_VECTORS_FROM   = 2
+        , HANDLERS_TO_ARRAY       = 3
+        , NAMES                   = 4
+    ;
 
     protected const
         CACHE = [
             self::HANDLERS_FROM         => [],
             self::HANDLERS_VECTORS_FROM => [],
             self::HANDLERS_TO_ARRAY     => [],
+            self::NAMES                 => [],
         ];
 
     private const
@@ -79,17 +82,24 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         $types = self::$_cache[static::class];
 
         foreach ($types[self::HANDLERS_FROM] as $key => [$fn, $arg]) {
-            if (\array_key_exists($key, $data)) {
-                $this->$fn($data[$key], $key, $arg);
+            foreach ($types[self::NAMES][$key] as $name) {
+                if (\array_key_exists($name, $data)) {
+                    $this->$fn($data[$name], $key, $arg);
+                    break;
+                }
             }
         }
 
         foreach ($types[self::HANDLERS_VECTORS_FROM] as $key => [$fn, $arg]) {
-            if (($data[$key] ?? null) !== null) {
-                $this->{$key} = [];
-                $this->$fn($data[$key], $this->{$key}, $arg);
-            } else if (\array_key_exists($key, $data)) {
-                $this->{$key} = null;
+            foreach ($types[self::NAMES][$key] as $name) {
+                if (($data[$name] ?? null) !== null) {
+                    $this->{$key} = [];
+                    $this->$fn($data[$name], $this->{$key}, $arg);
+                    break;
+                } else if (\array_key_exists($name, $data)) {
+                    $this->{$key} = null;
+                    break;
+                }
             }
         }
 
@@ -429,6 +439,12 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         foreach ($properties as $property) {
             $reflectionType = $property->getType() ?? new \stdClass();
             $key = $property->name;
+
+            $_cache[self::NAMES][$key] = [
+                $key,
+                ...($property->getAttributes(Alias::class) + [null])[0]?->getArguments() ?? []
+            ];
+
             if ($reflectionType instanceof \ReflectionNamedType) {
                 $type = $reflectionType->getName();
                 if (self::IS_SCALAR_TYPES[$type] ?? false) {
