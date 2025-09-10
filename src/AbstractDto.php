@@ -10,6 +10,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         , HANDLERS_VECTORS_FROM   = 2
         , HANDLERS_TO_ARRAY       = 3
         , NAMES                   = 4
+        , PRE_MUTATORS            = 5
     ;
 
     protected const
@@ -18,6 +19,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
             self::HANDLERS_VECTORS_FROM => [],
             self::HANDLERS_TO_ARRAY     => [],
             self::NAMES                 => [],
+            self::PRE_MUTATORS          => [],
         ];
 
     private const
@@ -84,7 +86,14 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         foreach ($types[self::HANDLERS_FROM] as $key => [$fn, $arg]) {
             foreach ($types[self::NAMES][$key] as $name) {
                 if (\array_key_exists($name, $data)) {
-                    $this->$fn($data[$name], $key, $arg);
+                    $value = $data[$name];
+
+                    /** @var callable $preMutator */
+                    foreach ($types[self::PRE_MUTATORS][$key] as $preMutator) {
+                        $value = $preMutator($value);
+                    }
+
+                    $this->$fn($value, $key, $arg);
                     break;
                 }
             }
@@ -94,7 +103,14 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
             foreach ($types[self::NAMES][$key] as $name) {
                 if (($data[$name] ?? null) !== null) {
                     $this->{$key} = [];
-                    $this->$fn($data[$name], $this->{$key}, $arg);
+                    $values = $data[$name];
+
+                    /** @var callable $preMutator */
+                    foreach ($types[self::PRE_MUTATORS][$key] as $preMutator) {
+                        $values = \array_map($preMutator, $values);
+                    }
+
+                    $this->$fn($values, $this->{$key}, $arg);
                     break;
                 } else if (\array_key_exists($name, $data)) {
                     $this->{$key} = null;
@@ -444,6 +460,10 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
                 $key,
                 ...($property->getAttributes(Alias::class) + [null])[0]?->getArguments() ?? []
             ];
+
+            $_cache[self::PRE_MUTATORS][$key] = (
+                $property->getAttributes(PreMutator::class) + [null]
+            )[0]?->getArguments() ?? [];
 
             if ($reflectionType instanceof \ReflectionNamedType) {
                 $type = $reflectionType->getName();
