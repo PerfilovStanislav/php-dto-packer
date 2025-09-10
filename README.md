@@ -14,16 +14,23 @@ use DtoPacker\AbstractDto;
 
 class Family extends AbstractDto
 {
+    #[Alias('lastname', 'family_name')]
+    #[PreMutator('ucfirst', [CustomMutator::class, 'change'])]
     public string $surname;
+    
     protected array|Person $persons;
+    
     public bool $hasCar;
 }
 
 class Person extends AbstractDto
 {
     public string $name;
+    
     public \DateTime $birthday;
+    
     protected PersonTypeEnum $type;
+    
     protected array|string $friends;
 }
 
