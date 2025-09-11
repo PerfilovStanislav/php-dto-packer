@@ -15,5 +15,5 @@ class Family extends AbstractDto
 
     protected array|Person $persons;
 
-    public bool $hasCar;
+    public bool $hasCar = true;
 }

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace DtoPacker;
 
-abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Stringable, \ArrayAccess
+abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Stringable, \ArrayAccess, \Serializable
 {
     protected const
           HANDLERS_FROM           = 1
@@ -11,6 +11,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         , HANDLERS_TO_ARRAY       = 3
         , NAMES                   = 4
         , PRE_MUTATORS            = 5
+        , DEFAULT_VALUES          = 6
     ;
 
     protected const
@@ -68,6 +69,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         $types = self::$_cache[static::class][self::HANDLERS_TO_ARRAY];
 
         $vars = \get_object_vars($this);
+
         foreach ($vars as $key => $val) {
             if ($val === null) {
                 $result[$key] = null;
@@ -122,6 +124,52 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         return $this;
     }
 
+    public function pack(bool $clone = true): static
+    {
+        $obj = $clone ? clone $this : $this;
+
+        $defaults = self::$_cache[static::class][self::DEFAULT_VALUES] ??= \get_class_vars(static::class);
+        unset($defaults['_cache']);
+
+        foreach ($defaults as $key => $default) {
+            $obj->removeDuplicates($key, $default);
+        }
+
+        return $obj;
+    }
+
+    protected function removeDuplicates(string $key, mixed $default): void
+    {
+        $val = ($this->$key ?? null);
+
+        if ($val instanceof AbstractDto) {
+            if ($val->pack(false)->toArray() === ($default ?? [])) {
+                unset($this->$key);
+            }
+        } elseif (\is_array($val)) {
+            if (\array_is_list($val)) {
+                $this->clearList($val);
+            }
+        }
+
+        if ($val === $default) {
+            unset($this->$key);
+        }
+    }
+
+    protected function clearList(array &$values): void
+    {
+        foreach ($values as $i => $v) {
+            if ($v instanceof AbstractDto) {
+                $v->pack(false)->toArray();
+            } elseif (\is_scalar($v)) {
+                //
+            } elseif (\array_is_list($v)) {
+                $this->clearList($v);
+            }
+        }
+    }
+
     /** @return string[] */
     public function initialized(): array
     {
@@ -151,6 +199,16 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
     public function __toString(): string
     {
         return \json_encode($this->toArray(), JSON_UNESCAPED_UNICODE);
+    }
+
+    public function serialize(): string
+    {
+        return \json_encode($this->toArray(), JSON_UNESCAPED_UNICODE);
+    }
+
+    public function unserialize(string $data): void
+    {
+        $this->fromArray(json_decode($data, true));
     }
 
     public function __set(string $name, $value): void
@@ -358,12 +416,12 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
         $link = $value->value;
     }
 
-    protected function toUnitEnum(?array &$link, mixed $value): void
+    protected function toUnitEnum(?array &$link, \UnitEnum $value): void
     {
         $link = $value->name;
     }
 
-    protected function toDto(?array &$link, mixed $value): void
+    protected function toDto(?array &$link, PackableInterface $value): void
     {
         $link = $value->toArray();
     }
@@ -458,7 +516,7 @@ abstract class AbstractDto implements PackableInterface, \JsonSerializable, \Str
 
             $_cache[self::NAMES][$key] = [
                 $key,
-                ...($property->getAttributes(Alias::class) + [null])[0]?->getArguments() ?? []
+                ...($property->getAttributes(Alias::class) + [null])[0]?->getArguments() ?? [],
             ];
 
             $_cache[self::PRE_MUTATORS][$key] = (

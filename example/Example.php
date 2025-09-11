@@ -24,10 +24,12 @@ class Example
         ]);
         $family->persons[2]->friends = ['Jason Statham', 'John Depp'];
 
-        $convertedToString = (string)$family;
+        $convertedToString = (string)$family; // "$family"
 
         $convertedToArray = $family->toArray();
 
         $createdFromJsonString = new Family($convertedToString);
+
+        $withoutDefaultValues = $family->pack()->toArray();
     }
 }
