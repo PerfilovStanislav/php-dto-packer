@@ -38,7 +38,7 @@ class ValidationExceptions extends \RuntimeException
             'field' => $field,
             'index' => $indexes,
             'error' => $message,
-            'path'  => "{$field}[" . \implode('][', $indexes) . "]",
+            'path'  => "{$field}[" . \implode('][', $indexes) . ']',
         ]);
     }
 

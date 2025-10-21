@@ -20,7 +20,9 @@ class Between extends AbstractValidator
 
     public function __invoke(mixed $value): \Generator
     {
-        if (empty($value)) return;
+        if (empty($value)) {
+            return ;
+        }
 
         $dt     = $value->getTimestamp();
         $from   = $this->toDate($this->from)->getTimestamp();

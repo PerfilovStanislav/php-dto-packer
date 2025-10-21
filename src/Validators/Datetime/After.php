@@ -7,7 +7,6 @@ namespace DtoPacker\Validators\Datetime;
 use DtoPacker\Validators\AbstractValidator;
 use DtoPacker\Validators\DatetimeTrait;
 
-
 class After extends AbstractValidator
 {
     use DatetimeTrait;

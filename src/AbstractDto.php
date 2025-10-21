@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace DtoPacker;
@@ -8,13 +9,13 @@ use DtoPacker\Validators as V;
 abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringable, \ArrayAccess, \Serializable
 {
     protected const
-          HANDLERS_FROM    = 1
-        , HANDLERS_TO      = 2
-        , NAMES            = 3
-        , PRE_MUTATORS     = 4
-        , DEFAULT_VALUES   = 5
-        , FIELD_VALIDATORS = 6
-        , ARRAY_VALIDATORS = 7
+        HANDLERS_FROM    = 1,
+        HANDLERS_TO      = 2,
+        NAMES            = 3,
+        PRE_MUTATORS     = 4,
+        DEFAULT_VALUES   = 5,
+        FIELD_VALIDATORS = 6,
+        ARRAY_VALIDATORS = 7
     ;
 
     protected const
@@ -95,7 +96,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 if ($fn === self::TO_SCALAR) {
                     $field = $value;
                 } elseif ($fn === self::TO_OBJECT) {
-                    $field = (array)$value;
+                    $field = (array) $value;
                 } elseif ($fn === self::TO_DTO) {
                     /** @var UnpackableInterface $value */
                     $field = $value->toArray();
@@ -165,7 +166,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                             $value . \substr(self::DT_POSTFIX, \strlen($value))
                         );
                     } elseif ($fn === self::FROM_OBJECT) {
-                        $this->{$key} = (object)$value;
+                        $this->{$key} = (object) $value;
                     }
                 } else {
                     $this->{$key} = [];
@@ -201,7 +202,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                             }
                         } elseif ($fn === self::FROM_OBJECTS) {
                             foreach ($value as $v) {
-                                $this->{$key}[] = \is_object($v) ? $v : (object)$v;
+                                $this->{$key}[] = \is_object($v) ? $v : (object) $v;
                             }
                         }
                     } elseif ($fn === self::FROM_DTOS) {
@@ -255,11 +256,12 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
 
                 foreach ($validator($this->$key ?? null) as $e) {
                     $exceptions ??= new V\ValidationExceptions();
-                    $exceptions->addFieldException($key, $e);
+                    $exceptions->addFieldException($key, $e->getMessage(), $e);
 
-                    if ($break) break 2;
-                };
-
+                    if ($break) {
+                        return;
+                    }
+                }
             }
         }
     }
@@ -302,8 +304,10 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                     $exceptions ??= new V\ValidationExceptions();
                     $exceptions->addArrayException($key, $indexes, $e->getMessage(), $e);
 
-                    if ($break) break 2;
-                };
+                    if ($break) {
+                        return;
+                    }
+                }
             }
         }
     }
@@ -312,7 +316,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
     {
         $exceptions ??= new V\ValidationExceptions();
 
-        $i = empty($indexes) ? '' : "[" . \implode('][', $indexes) . "]";
+        $i = empty($indexes) ? '' : '[' . \implode('][', $indexes) . ']';
         foreach ($e->errors as $error) {
             $error->path = "$key$i.$error->path";
         }
@@ -457,7 +461,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
         foreach (\get_object_vars($this) as $key => $value) {
             if (\is_object($value) && ($value instanceof \UnitEnum) === false) {
                 $this->{$key} = ($objects[\spl_object_id($value)] ??= clone $value);
-            } else if (\is_array($value)) {
+            } elseif (\is_array($value)) {
                 $this->clone($this->{$key}, $value, $objects);
             }
         }
@@ -522,7 +526,6 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 if ($value instanceof $class) {
                     $link[] = $value;
                 } else {
-                    /** @var \UnitEnum $class */
                     $link[] = \constant("$class::$value");
                 }
             }
@@ -637,20 +640,32 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
         }
     }
 
-    protected function ints(int ...$v): array { return $v; }
+    protected function ints(int ...$v): array
+    {
+        return $v;
+    }
 
-    protected function strings(string ...$v): array { return $v; }
+    protected function strings(string ...$v): array
+    {
+        return $v;
+    }
 
-    protected function bools(bool ...$v): array { return $v; }
+    protected function bools(bool ...$v): array
+    {
+        return $v;
+    }
 
-    protected function floats(float ...$v): array { return $v; }
+    protected function floats(float ...$v): array
+    {
+        return $v;
+    }
 
     protected function getProperties(): array
     {
         $_cache = self::CACHE;
 
         $class = new \ReflectionClass($this);
-        $properties = $class->getProperties(\ReflectionProperty::IS_PUBLIC|\ReflectionProperty::IS_PROTECTED);
+        $properties = $class->getProperties(\ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED);
 
         foreach ($properties as $property) {
             $reflectionType = $property->getType() ?? new \stdClass();
@@ -678,23 +693,23 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
 
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_SCALAR, null, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_SCALAR;
-                } else if ($type === self::TYPE_OBJECT) {
+                } elseif ($type === self::TYPE_OBJECT) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_OBJECT, null, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_OBJECT;
-                } else if ($dt = self::DATETIME_CLASSES[$type] ?? false) {
+                } elseif ($dt = self::DATETIME_CLASSES[$type] ?? false) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DATETIME, $dt, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DATETIME;
-                } else if (($variableType = new \ReflectionClass($type))->implementsInterface(PackableInterface::class)) {
+                } elseif (($variableType = new \ReflectionClass($type))->implementsInterface(PackableInterface::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DTO, $type, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DTO;
-                } else if ($variableType->implementsInterface(\BackedEnum::class)) {
+                } elseif ($variableType->implementsInterface(\BackedEnum::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_BACKED_ENUM, $type, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_BACKED_ENUM;
-                } else if ($variableType->implementsInterface(\UnitEnum::class)) {
+                } elseif ($variableType->implementsInterface(\UnitEnum::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_UNIT_ENUM, $type, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_UNIT_ENUM;
                 }
-            } else if ($reflectionType instanceof \ReflectionUnionType) {
+            } elseif ($reflectionType instanceof \ReflectionUnionType) {
                 $reflectionTypes = $reflectionType->getTypes();
                 $isVector = false;
                 $type = null;
@@ -703,7 +718,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                     $tp = $reflectionType->getName();
                     if ($tp === self::TYPE_NULL) {
                         //
-                    } else if ($tp === self::TYPE_ARRAY) {
+                    } elseif ($tp === self::TYPE_ARRAY) {
                         $isVector = true;
                     } else {
                         $type = $tp;
@@ -717,19 +732,19 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 if (self::IS_SCALAR_TYPES[$type] ?? false) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_SCALARS, "{$type}s", $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_SCALAR;
-                } else if ($type === self::TYPE_OBJECT) {
+                } elseif ($type === self::TYPE_OBJECT) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_OBJECTS, null, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_OBJECTS;
-                } else if ($dt = self::DATETIME_CLASSES[$type] ?? false) {
+                } elseif ($dt = self::DATETIME_CLASSES[$type] ?? false) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DATETIMES, $dt, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DATETIMES;
-                } else if (($variableType = new \ReflectionClass($type))->implementsInterface(PackableInterface::class)) {
+                } elseif (($variableType = new \ReflectionClass($type))->implementsInterface(PackableInterface::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DTOS, $type, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DTOS;
-                } else if ($variableType->implementsInterface(\BackedEnum::class)) {
+                } elseif ($variableType->implementsInterface(\BackedEnum::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_BACKED_ENUMS, $type, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_BACKED_ENUMS;
-                } else if ($variableType->implementsInterface(\UnitEnum::class)) {
+                } elseif ($variableType->implementsInterface(\UnitEnum::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_UNIT_ENUMS, $type, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_UNIT_ENUMS;
                 } else {
@@ -757,7 +772,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
         foreach ($data as $i => $value) {
             if (\is_object($value) && ($value instanceof \UnitEnum) === false) {
                 $link[$i] = ($objects[\spl_object_id($value)] ??= clone $value);
-            } else if (\is_array($value)) {
+            } elseif (\is_array($value)) {
                 $this->clone($link[$i], $value, $objects);
             }
         }

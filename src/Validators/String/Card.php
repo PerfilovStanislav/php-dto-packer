@@ -6,7 +6,6 @@ namespace DtoPacker\Validators\String;
 
 use DtoPacker\Validators\AbstractValidator;
 
-
 class Card extends AbstractValidator
 {
     public function __construct(
@@ -19,7 +18,7 @@ class Card extends AbstractValidator
         if (empty($value)) {
             return;
         }
-        
+
         if (\preg_match('/^(\d{4})[- ]?(\d{4})[- ]?(\d{4})[- ]?(\d{4})$/', "$value", $m) !== 1) {
             return yield $this->exception();
         }
@@ -30,11 +29,11 @@ class Card extends AbstractValidator
         $sum = 0;
 
         foreach ([1, 3, 5, 7, 9, 11, 13, 15] as $i) {
-            $sum += (int)$digits[$i];
+            $sum += (int) $digits[$i];
         }
 
         foreach ([0, 2, 4, 6, 8, 10, 12, 14] as $i) {
-            $n = (int)$digits[$i];
+            $n = (int) $digits[$i];
             $n *= 2;
             ($n > 9) && $n -= 9;
             $sum += $n;

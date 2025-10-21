@@ -26,19 +26,17 @@ class Unique extends AbstractValidator
         $exists = [];
         foreach ($values as $index => $value) {
             $v = $this->value($value);
-            
+
             if (isset($exists[$v])) {
                 $this->indexes = $indexes;
                 yield $this->exception();
             }
-            
-            $exists[$v] = true;
-        }
 
-        if (\count($indexes) + 1 < $this->dimension) {
-            foreach ($values as $index => $value) {
-                yield from $this->validate($value, [...$indexes, $index]);
-            }
+            \is_array($value)
+                && \array_is_list($value)
+                && yield from $this->validate($value, [...$indexes, $index]);
+
+            $exists[$v] = true;
         }
     }
 }

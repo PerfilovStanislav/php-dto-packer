@@ -6,7 +6,6 @@ namespace DtoPacker\Validators\Numeric;
 
 use DtoPacker\Validators\AbstractValidator;
 
-
 class Between extends AbstractValidator
 {
     public function __construct(

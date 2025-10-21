@@ -24,7 +24,7 @@ class Requires extends AbstractValidator
 
         foreach ($this->fields as $key) {
             $val = $this->dto->$key ?? null;
-            
+
             if (isset($this->indexes[0])) {
                 foreach ($this->indexes as $i) {
                     $val = $val[$i] ?? null;

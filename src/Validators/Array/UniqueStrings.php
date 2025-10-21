@@ -20,7 +20,7 @@ class UniqueStrings extends AbstractValidator
     public function __invoke(mixed $value): \Generator
     {
         isset($value[0])
-            && (\count(\array_flip($value)) !== \count($value)) 
+            && (\count(\array_flip($value)) !== \count($value))
             && yield $this->exception();
     }
 }

@@ -6,7 +6,6 @@ namespace DtoPacker\Validators\String;
 
 use DtoPacker\Validators\AbstractValidator;
 
-
 class Cuid extends AbstractValidator
 {
     public function __construct(

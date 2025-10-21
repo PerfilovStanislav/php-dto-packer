@@ -39,7 +39,7 @@ trait HumanReadableTypeTrait
             if ($v instanceof \UnitEnum) {
                 return $v->name;
             }
-            
+
             return $this->value((array)$v);
         }
 

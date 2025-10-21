@@ -9,7 +9,7 @@ use DtoPacker\UnpackableInterface;
 class Error extends AbstractValidator
 {
     protected string|\Stringable $error = '{field} has error';
-    
+
     public function __construct(
         protected UnpackableInterface $dto,
         protected string $field,

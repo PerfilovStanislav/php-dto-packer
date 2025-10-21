@@ -1,5 +1,10 @@
 **DtoPacker** is a small PHP library to pack data into a strongly-typed value object structure. Use it when you want to transfer objects between services and send to front.
 
+[![CI](https://github.com/PerfilovStanislav/php-dto-packer/actions/workflows/tests.yml/badge.svg)](https://github.com/PerfilovStanislav/php-dto-packer/actions/workflows/tests.yml)
+[![Packagist](https://img.shields.io/packagist/v/perfilov/php-dto-packer.svg)](https://packagist.org/packages/perfilov/php-dto-packer)
+[![Codecov](https://codecov.io/gh/PerfilovStanislav/php-dto-packer/branch/main/graph/badge.svg)](https://codecov.io/gh/PerfilovStanislav/php-dto-packer)
+[![PHP](https://img.shields.io/packagist/php-v/perfilov/php-dto-packer.svg)](https://www.php.net/)
+
 #### _Write to me if you need additional features_ [![contact](./source/telegram.svg "telegram @PerfilovStanislav") PerfilovStanislav](https://PerfilovStanislav.t.me)
 
 ---
@@ -10,6 +15,7 @@ composer require perfilov/php-dto-packer
 ```
 
 --- 
+
 - [Example](#quick-example)
 - [Aliases](#aliases)
 - [Typed arrays](#typed-arrays)

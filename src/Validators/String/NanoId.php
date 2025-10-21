@@ -6,7 +6,6 @@ namespace DtoPacker\Validators\String;
 
 use DtoPacker\Validators\AbstractValidator;
 
-
 class NanoId extends AbstractValidator
 {
     public function __construct(
