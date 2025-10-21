@@ -37,12 +37,6 @@ jobs:
           key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
-      - name: Update PHP-CS-Fixer
-        run: composer update friendsofphp/php-cs-fixer --with-all-dependencies --no-interaction
-
-      - name: Check PHP-CS-Fixer version
-        run: vendor/bin/php-cs-fixer --version
-
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist
 
@@ -55,14 +49,14 @@ jobs:
 
       - name: Run PHP-CS-Fixer
         if: github.event_name == 'push'
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --ansi --parallel
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
 
       - name: Run PHP-CS-Fixer on changed files (PR)
         if: github.event_name == 'pull_request'
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.base_ref }}...${{ github.sha }} -- '*.php')
           if [ -n "$CHANGED_FILES" ]; then
-            vendor/bin/php-cs-fixer fix --dry-run --diff --ansi --parallel $CHANGED_FILES
+            vendor/bin/php-cs-fixer fix --dry-run --diff --ansi $CHANGED_FILES
           else
             echo "No PHP files changed."
           fi
