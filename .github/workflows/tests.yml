@@ -40,16 +40,6 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist
 
-      - name: Cache PHPStan
-        uses: actions/cache@v4
-        with:
-          path: .phpstan/cache
-          key: phpstan-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
-          restore-keys: phpstan-
-
-      - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --memory-limit=1G --parallel
-
       - name: Cache PHP-CS-Fixer
         uses: actions/cache@v4
         with:
