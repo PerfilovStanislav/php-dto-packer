@@ -8,7 +8,6 @@
     "object-conversion","fast", "performance", "lightweight", "php"
   ],
   "type": "library",
-  "version": "5.3.0",
   "time": "2025-09-11",
   "default-branch": true,
   "authors": [
@@ -19,7 +18,7 @@
       "role": "developer"
     }
   ],
-  "homepage": "https://t.me/phpdto",
+  "homepage": "https://beacons.ai/stanislavperfilov",
   "require": {
     "php": ">=8.1"
   },

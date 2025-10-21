@@ -4,32 +4,54 @@ class Example
 {
     public function __construct()
     {
-        $family = new Family([
-            'surname' => 'Perfilov',
-            'persons' => [
-                [ // from array
-                    'name'      => 'Stanislav',
-                    'birthday'  => '1987-12-13T12:05:55+03:00',
-                    'type'      => 'HUSBAND',
-                    'friends'   => ['Elon Musk', 'Guy Ritchie'],
-                ], new Person([ // or object
-                    'name'      => 'Natali',
-                    'type'      => PersonTypeEnum::WIFE,
-                    'birthday'  => \DateTime::createFromFormat('d.m.Y', '28.11.1994'),
-                ]),[
-                    'name'      => 'Leo',
-                    'type'      => 'CHILD',
+        $data = [
+            'id'     => 1,
+            'name'   => 'USA',
+            'citizens' => [
+                [
+                    'lastname'  => 'Mask',
+                    'email'     => 'elon@tesla.com',
+                    'birthdate' => '1971-06-28',
+                    'purchases' => [
+                        [
+                            'id'        => 10,
+                            'status'    => 'CREATED',
+                            'products'  => [
+                                [
+                                    'id'        => 1000,
+                                    'name'      => 'Tesla',
+                                    'price'     => 99.99,
+                                    'currency'  => 'usd',
+                                ]
+                            ],
+                        ]
+                    ]
+                ],
+                [
+                    'surname'   => 'Trump',
+                    'email'     => 'donald@trump.com',
+                    'birthdate' => new \DateTime('1946-06-14'),
+                    'purchases' => [
+                        [
+                            'id'        => 11,
+                            'status'    => PurchaseStatus::DELIVERED,
+                            'products'  => [
+                                [
+                                    'id'        => 1001,
+                                    'name'      => 'Trump Tower',
+                                    'price'     => 999.99,
+                                    'currency'  => Currency::EUR,
+                                ]
+                            ],
+                        ]
+                    ]
                 ],
             ],
-        ]);
-        $family->persons[2]->friends = ['Jason Statham', 'John Depp'];
+        ];
 
-        $convertedToString = (string)$family; // "$family"
+        $dto = new CountryDto($data);
 
-        $convertedToArray = $family->toArray();
-
-        $createdFromJsonString = new Family($convertedToString);
-
-        $withoutDefaultValues = $family->pack()->toArray();
+        echo "$dto";            // {"id":1,"name":"USA","citizens":[{"surname":"Mr Mask","email":"elon@tesla.com","birthdate":"1971-06-28T00:00:00.000+00:00","purchases":[{"id":10,"status":"CREATED","products":[{"id":1000,"name":"Tesla","price":99.99,"currency":"usd"}]}]},{"surname":"Mr Trump","email":"donald@trump.com","birthdate":"1946-06-14T00:00:00.000+00:00","purchases":[{"id":11,"status":"DELIVERED","products":[{"id":1001,"name":"Trump Tower","price":999.99,"currency":"eur"}]}]}]}
+        echo "{$dto->pack()}";  // {"id":1,"name":"USA","citizens":[{"surname":"Mr Mask","email":"elon@tesla.com","birthdate":"1971-06-28T00:00:00.000+00:00","purchases":[{"id":10,"products":[{"id":1000,"name":"Tesla","price":99.99}]}]},{"surname":"Mr Trump","email":"donald@trump.com","birthdate":"1946-06-14T00:00:00.000+00:00","purchases":[{"id":11,"status":"DELIVERED","products":[{"id":1001,"name":"Trump Tower","price":999.99,"currency":"eur"}]}]}]}
     }
 }

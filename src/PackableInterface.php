@@ -4,7 +4,9 @@ namespace DtoPacker;
 
 interface PackableInterface
 {
-    public function __construct(string|array $data);
+    public function __construct(string|array $data, bool $withMutators = true);
 
-    public function toArray(): array;
+    public function fromArray(array $data, bool $withMutators = true): static;
+
+    public function __set(string $name, $value): void;
 }
