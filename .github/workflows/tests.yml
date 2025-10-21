@@ -37,6 +37,12 @@ jobs:
           key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
+      - name: Update PHP-CS-Fixer
+        run: composer update friendsofphp/php-cs-fixer --with-all-dependencies --no-interaction
+
+      - name: Check PHP-CS-Fixer version
+        run: vendor/bin/php-cs-fixer --version
+
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist
 
