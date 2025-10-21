@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="vendor/autoload.php"
          colors="true"
-         verbose="true"
-         coverage-clover="coverage.xml">
+         executionOrder="default"
+         stopOnFailure="false">
+
     <testsuites>
         <testsuite name="DTO Packer Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
 
-    <filter>
-        <whitelist>
+    <coverage processUncoveredFiles="true">
+        <include>
             <directory suffix=".php">src</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </coverage>
+
 </phpunit>
