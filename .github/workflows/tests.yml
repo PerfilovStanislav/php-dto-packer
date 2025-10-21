@@ -23,8 +23,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, json
-          coverage: none
+          extensions: mbstring, json, xdebug
+          coverage: xdebug
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -49,14 +49,14 @@ jobs:
 
       - name: Run PHP-CS-Fixer
         if: github.event_name == 'push'
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --ansi
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --ansi --parallel
 
       - name: Run PHP-CS-Fixer on changed files (PR)
         if: github.event_name == 'pull_request'
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.base_ref }}...${{ github.sha }} -- '*.php')
           if [ -n "$CHANGED_FILES" ]; then
-            vendor/bin/php-cs-fixer fix --dry-run --diff --ansi $CHANGED_FILES
+            vendor/bin/php-cs-fixer fix --dry-run --diff --ansi --parallel $CHANGED_FILES
           else
             echo "No PHP files changed."
           fi
