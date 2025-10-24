@@ -6,7 +6,7 @@ namespace DtoPacker;
 
 use DtoPacker\Validators as V;
 
-abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringable, \ArrayAccess, \Serializable
+abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringable, \ArrayAccess
 {
     protected const
         HANDLERS_FROM    = 1,
@@ -129,14 +129,14 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 continue;
             }
 
-            if ($withMutators && isset($types[self::PRE_MUTATORS][$key][0])) {
-                /** @var callable $preMutator */
-                foreach ($types[self::PRE_MUTATORS][$key] as $preMutator) {
-                    $value = $preMutator($value);
-                }
-            }
-
             try {
+                if ($withMutators && isset($types[self::PRE_MUTATORS][$key][0])) {
+                    /** @var callable $preMutator */
+                    foreach ($types[self::PRE_MUTATORS][$key] as $preMutator) {
+                        $value = $preMutator($value);
+                    }
+                }
+
                 if ($value === null) {
                     $this->{$key} = null;
                     continue;
@@ -360,7 +360,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
         foreach ($values as $v) {
             if ($v instanceof DtoInterface) {
                 $v->pack(false)->toArray();
-            } elseif (\is_scalar($v)) {
+            } elseif (\is_object($v) || \is_scalar($v)) {
                 //
             } elseif (\array_is_list($v)) {
                 $this->clearList($v);
@@ -397,16 +397,6 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
     public function __toString(): string
     {
         return \json_encode($this->toArray(), JSON_UNESCAPED_UNICODE);
-    }
-
-    public function serialize(): string
-    {
-        return \json_encode($this->toArray(), JSON_UNESCAPED_UNICODE);
-    }
-
-    public function unserialize(string $data): void
-    {
-        $this->fromArray($data, false);
     }
 
     public function __set(string $name, $value): void
@@ -583,10 +573,6 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
 
     protected function toDtos(?array &$link, mixed $data): void
     {
-        if (empty($data)) {
-            $link = [];
-            return;
-        }
         foreach ($data as $i => $value) {
             if ($value instanceof UnpackableInterface) {
                 $link[] = $value->toArray();

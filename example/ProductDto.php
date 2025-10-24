@@ -2,17 +2,20 @@
 
 declare(strict_types=1);
 
+namespace Example;
+
 use DtoPacker\AbstractDto;
+use DtoPacker\Dimension;
+use DtoPacker\Validators\Array\Unique;
 use DtoPacker\Validators\FieldValidators;
 use DtoPacker\Validators\Mixed\Required;
-use DtoPacker\Validators\Numeric\Min;
 use DtoPacker\Validators\String\LengthMin;
 
 /**
  * @property int $id
  * @property string $name
- * @property float $price
- * @property Currency $currency
+ * @property PriceDto $price
+ * @property Tag[] $tags
  */
 class ProductDto extends AbstractDto
 {
@@ -26,10 +29,11 @@ class ProductDto extends AbstractDto
     )]
     protected string $name;
 
-    #[FieldValidators(
-        new Min(0.01)
-    )]
-    protected float $price;
+    protected PriceDto $price;
 
-    protected Currency $currency = Currency::USD;
+    #[FieldValidators(
+        new Unique(),
+    )]
+    #[Dimension(2)]
+    protected array|Tag $tags;
 }

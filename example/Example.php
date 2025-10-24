@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
+namespace Example;
+
 class Example
 {
     public function __construct()
     {
         $data = [
-            'id'     => 1,
-            'name'   => 'USA',
+            'id'   => 1,
+            'name' => 'USA',
+            'fake' => 'fake',
             'citizens' => [
                 [
                     'lastname'  => 'Mask',
@@ -20,16 +25,21 @@ class Example
                                 [
                                     'id'        => 1000,
                                     'name'      => 'Tesla',
-                                    'price'     => 99.99,
-                                    'currency'  => 'usd',
+                                    'price'     => [
+                                        'amount' => 99.99,
+                                        'currency'  => 'usd',
+                                    ],
                                 ]
                             ],
+                            'tags' => [[Tag::TRANSPORT], [Tag::METAL, Tag::RED]],
                         ]
-                    ]
+                    ],
+                    'additional' => new \stdClass(),
+                    'friends' => ['Trump'],
                 ],
                 [
                     'surname'   => 'Trump',
-                    'email'     => 'donald@trump.com',
+                    'email'     => null,
                     'birthdate' => new \DateTime('1946-06-14'),
                     'purchases' => [
                         [
@@ -39,12 +49,17 @@ class Example
                                 [
                                     'id'        => 1001,
                                     'name'      => 'Trump Tower',
-                                    'price'     => 999.99,
-                                    'currency'  => Currency::EUR,
+                                    'price'     => [
+                                        'amount' => 999.99,
+                                        'currency'  => Currency::EUR,
+                                    ],
+                                    'tags' => [[Tag::REAL_ESTATE], [Tag::METAL, Tag::BLUE], ['wood', 'yellow']],
                                 ]
                             ],
                         ]
-                    ]
+                    ],
+                    'additional' => ['loves_dogs' => true],
+                    'friends' => ['Elon'],
                 ],
             ],
         ];

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Example;
+
 use DtoPacker\AbstractDto;
 use DtoPacker\Validators\FieldValidators;
 use DtoPacker\Validators\Mixed\Required;

@@ -7,7 +7,7 @@ namespace DtoPacker;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class Dimension
+final class Dimension
 {
     public function __construct(public readonly int $dimension)
     {

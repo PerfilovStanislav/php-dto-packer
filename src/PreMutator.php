@@ -9,11 +9,8 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 final class PreMutator
 {
-    public array $fns = [];
-
     public function __construct(
         callable ...$fns
     ) {
-        $this->fns = $fns;
     }
 }

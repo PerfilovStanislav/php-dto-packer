@@ -14,6 +14,12 @@
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <exclude>
+            <file>src/Alias.php</file>
+            <file>src/Dimension.php</file>
+            <file>src/PreMutator.php</file>
+            <file>src/Validators/FieldValidators.php</file>
+        </exclude>
     </coverage>
 
 </phpunit>
