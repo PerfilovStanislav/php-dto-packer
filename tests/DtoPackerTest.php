@@ -55,6 +55,7 @@ class DtoPackerTest extends TestCase
                 'datetime' => '2020-01-01',
                 'datetimes' => ['2020-01-01'],
                 'datetimes2' => [['2020-01-01']],
+                'dto' => [],
                 'dtos' => [[]],
                 'dtos2' => [[[]]],
             ],
@@ -69,9 +70,9 @@ class DtoPackerTest extends TestCase
         \json_encode($dto);
         \unserialize(\serialize($dto));
         $dto->dto->string = 's';
-        isset($dto->string);
-        isset($dto['string']);
-        $dto['string'];
+        $this->assertTrue(isset($dto->string));
+        $this->assertTrue(isset($dto['string']));
+        $this->assertIsString($dto['string']);
         $dto['string'] = 's';
         unset($dto->string);
         unset($dto['string']);
@@ -127,9 +128,23 @@ class DtoPackerTest extends TestCase
             $this->assertStringEndsWith('no handler', $e->getMessage());
         }
     }
+
+    public function testUnknownUnionTypes(): void
+    {
+        try {
+            new Fail3Dto([]);
+        } catch (\Throwable $e) {
+            $this->assertStringEndsWith('RuntimeException', $e->getMessage());
+        }
+    }
 }
 
 class Fail2Dto extends AbstractDto
 {
     protected Fail2Dto&FailDto $dto;
+}
+
+class Fail3Dto extends AbstractDto
+{
+    protected array|\RuntimeException $dto;
 }

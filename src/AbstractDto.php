@@ -406,9 +406,6 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
 
     public function __get(string $name): mixed
     {
-        (isset($this->{$name}) === false)
-            && $this->fromArray([$name => []]);
-
         return $this->{$name};
     }
 

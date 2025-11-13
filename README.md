@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/PerfilovStanislav/php-dto-packer/actions/workflows/tests.yml/badge.svg)](https://github.com/PerfilovStanislav/php-dto-packer/actions/workflows/tests.yml)
 [![Packagist](https://img.shields.io/packagist/v/perfilov/php-dto-packer.svg)](https://packagist.org/packages/perfilov/php-dto-packer)
+[![Downloads](https://img.shields.io/packagist/dt/perfilov/php-dto-packer.svg)](https://packagist.org/packages/perfilov/php-dto-packer)
 [![Codecov](https://codecov.io/gh/PerfilovStanislav/php-dto-packer/branch/master/graph/badge.svg)](https://codecov.io/gh/PerfilovStanislav/php-dto-packer)
 [![PHP](https://img.shields.io/packagist/php-v/perfilov/php-dto-packer.svg)](https://www.php.net/)
+[![License](https://img.shields.io/github/license/PerfilovStanislav/php-dto-packer.svg)](https://github.com/PerfilovStanislav/php-dto-packer/blob/main/LICENSE)
 
 #### _Write to me if you need additional features_ [![contact](./source/telegram.svg "telegram @PerfilovStanislav") PerfilovStanislav](https://PerfilovStanislav.t.me)
 

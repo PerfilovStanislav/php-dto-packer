@@ -128,7 +128,7 @@ class SuccessDto extends AbstractDto
     protected array|\DateTimeInterface $datetimes2;
 
 
-    protected SuccessDto $dto;
+    protected ?SuccessDto $dto = null;
     protected array|SuccessDto $dtos;
     #[Dimension(2)]
     protected array|SuccessDto $dtos2;
