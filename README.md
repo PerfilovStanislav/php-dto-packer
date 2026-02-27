@@ -330,7 +330,7 @@ class ExampleDto extends AbstractDto
         new Min(10),
         new Max(20),
     )]
-    protected int $ints;
+    protected array|int $ints;
 }
 
 $data = [

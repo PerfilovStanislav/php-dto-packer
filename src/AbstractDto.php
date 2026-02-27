@@ -163,7 +163,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                         /** @var \DateTimeInterface $class */
                         $this->{$key} = $class::createFromFormat(
                             \DateTimeInterface::RFC3339_EXTENDED,
-                            $value . \substr(self::DT_POSTFIX, \strlen($value))
+                            ($value = \rtrim($value, 'Z')) . \substr(self::DT_POSTFIX, \strlen($value))
                         );
                     } elseif ($fn === self::FROM_OBJECT) {
                         $this->{$key} = (object) $value;
@@ -197,7 +197,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                                         ? $v
                                         : $class::createFromFormat(
                                             \DateTimeInterface::RFC3339_EXTENDED,
-                                            $v . \substr(self::DT_POSTFIX, \strlen($v))
+                                            ($v = \rtrim($v, 'Z')) . \substr(self::DT_POSTFIX, \strlen($v))
                                         );
                             }
                         } elseif ($fn === self::FROM_OBJECTS) {
@@ -557,7 +557,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                     /** @var \DateTimeInterface $class */
                     $link[] = $class::createFromFormat(
                         \DateTimeInterface::RFC3339_EXTENDED,
-                        $value . \substr(self::DT_POSTFIX, \strlen($value))
+                        ($value = \rtrim($value, 'Z')) . \substr(self::DT_POSTFIX, \strlen($value))
                     );
                 }
             }

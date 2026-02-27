@@ -1,5 +1,10 @@
 # Changelog
 
+## [6.0.5] - 2026-02-27
+
+### Autoformatting ISO-8601 to ISO-8601 extended
+- from **2026-02-27T09:37:12Z** to **2026-02-27T09:37:12.000+00:00**
+
 ## [6.0.0] - 2025-10-21
 
 ### ✨ New Feature

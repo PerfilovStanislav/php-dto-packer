@@ -54,7 +54,7 @@ class DtoPackerTest extends TestCase
                 'unitEnums2' => [['UE']],
                 'datetime' => '2020-01-01',
                 'datetimes' => ['2020-01-01'],
-                'datetimes2' => [['2020-01-01']],
+                'datetimes2' => [['2025-01-23T14:28:02Z']],
                 'dto' => [],
                 'dtos' => [[]],
                 'dtos2' => [[[]]],
