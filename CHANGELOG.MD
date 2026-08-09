@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.0] - 2026-08-09
+
+### Set AbstractDto type for variables
+```php
+protected AbstractDto $dto
+```
+
 ## [6.0.5] - 2026-02-27
 
 ### Autoformatting ISO-8601 to ISO-8601 extended

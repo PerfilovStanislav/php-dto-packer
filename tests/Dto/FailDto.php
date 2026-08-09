@@ -74,4 +74,11 @@ class FailDto extends AbstractDto
 
     #[PreMutator([Mutator::class, 'throw'])]
     protected BackedEnum $be;
+
+    protected AbstractDto $abstract_dto;
+
+    protected array|AbstractDto $abstract_dtos;
+
+    #[Dimension(2)]
+    protected array|AbstractDto $abstract_dtos2;
 }

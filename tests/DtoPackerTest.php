@@ -61,6 +61,7 @@ class DtoPackerTest extends TestCase
             ],
             'dtos' => [new SuccessDto([])],
             'dtos2' => [[new SuccessDto([])]],
+            'abstract_dto' => new SuccessDto([]),
         ];
 
         $dto = new SuccessDto($data);
@@ -109,6 +110,9 @@ class DtoPackerTest extends TestCase
             'x1' => [1, 2, 3],
             'x2' => [10, 20],
             'x3' => -1,
+            'abstract_dto' => [FailDto::class, []],
+            'abstract_dtos' => [[FailDto::class, []], new SuccessDto([])],
+            'abstract_dtos2' => [[[FailDto::class, []], new SuccessDto([])]],
         ];
 
         try {

@@ -47,7 +47,8 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
         FROM_DTO         = 'fromDto'        , TO_DTO         = 'toDto'        , FROM_DTOS         = 'fromDtos'        , TO_DTOS         = 'toDtos',
         FROM_BACKED_ENUM = 'fromBackedEnum' , TO_BACKED_ENUM = 'toBackedEnum' , FROM_BACKED_ENUMS = 'fromBackedEnums' , TO_BACKED_ENUMS = 'toBackedEnums',
         FROM_UNIT_ENUM   = 'fromUnitEnum'   , TO_UNIT_ENUM   = 'toUnitEnum'   , FROM_UNIT_ENUMS   = 'fromUnitEnums'   , TO_UNIT_ENUMS   = 'toUnitEnums',
-        FROM_DATETIME    = 'fromDatetime'   , TO_DATETIME    = 'toDatetime'   , FROM_DATETIMES    = 'fromDatetimes'   , TO_DATETIMES    = 'toDatetimes'
+        FROM_DATETIME    = 'fromDatetime'   , TO_DATETIME    = 'toDatetime'   , FROM_DATETIMES    = 'fromDatetimes'   , TO_DATETIMES    = 'toDatetimes',
+        FROM_ABSTRACT    = 'fromAbstract'   , TO_ABSTRACT    = 'toAbstract'   , FROM_ABSTRACTS    = 'fromAbstracts'   , TO_ABSTRACTS    = 'toAbstracts'
     ;
 
     protected const IS_SCALAR_TYPES =  [
@@ -64,6 +65,9 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
         self::TYPE_DATETIME_IMMUTABLE => self::TYPE_DATETIME_IMMUTABLE,
         self::TYPE_DATETIME_INTERFACE => self::TYPE_DATETIME_IMMUTABLE,
     ];
+
+    protected const TYPE = 0;
+    protected const DATA = 1;
 
     public const DT_POSTFIX = '1970-01-01T00:00:00.000+00:00';
 
@@ -109,6 +113,12 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 } elseif ($fn === self::TO_DATETIME) {
                     /** @var \DateTimeInterface $value */
                     $field = $value->format(\DateTimeInterface::RFC3339_EXTENDED);
+                } elseif ($fn === self::TO_ABSTRACT) {
+                    /** @var UnpackableInterface $value */
+                    $field = [
+                        self::TYPE => $value::class,
+                        self::DATA => $value->toArray(),
+                    ];
                 } else {
                     $this->$fn($field, $value);
                 }
@@ -165,6 +175,12 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                             \DateTimeInterface::RFC3339_EXTENDED,
                             ($value = \rtrim($value, 'Z')) . \substr(self::DT_POSTFIX, \strlen($value))
                         );
+                    } elseif ($fn === self::FROM_ABSTRACT) {
+                        try {
+                            $this->{$key} = new $value[self::TYPE]($value[self::DATA]);
+                        } catch (V\ValidationExceptions $e) {
+                            $this->setException($key, $exceptions, $e);
+                        }
                     } elseif ($fn === self::FROM_OBJECT) {
                         $this->{$key} = (object) $value;
                     }
@@ -204,9 +220,21 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                             foreach ($value as $v) {
                                 $this->{$key}[] = \is_object($v) ? $v : (object) $v;
                             }
+                        } elseif ($fn === self::FROM_ABSTRACTS) {
+                            foreach ($value as $i => $v) {
+                                try {
+                                    $this->{$key}[] = $v instanceof $class
+                                        ? $v
+                                        : (new (($v = (array)$v)[self::TYPE])($v[self::DATA]));
+                                } catch (V\ValidationExceptions $e) {
+                                    $this->setException($key, $exceptions, $e, [$i]);
+                                }
+                            }
                         }
                     } elseif ($fn === self::FROM_DTOS) {
                         $this->fromDtos($key, $value, $this->{$key}, $dimension, [], $exceptions, 1, $class);
+                    } elseif ($fn === self::FROM_ABSTRACTS) {
+                        $this->fromAbstracts($key, $value, $this->{$key}, $dimension, [], $exceptions, 1, $class);
                     } else {
                         $this->$fn($value, $this->{$key}, $dimension, 1, $class);
                     }
@@ -488,6 +516,35 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
         }
     }
 
+    protected function fromAbstracts(
+        string $key,
+        array $data,
+        ?array &$link,
+        int $dimension,
+        array $indexes,
+        ?V\ValidationExceptions &$exceptions,
+        int $level,
+        string $class
+    ): void {
+        if ($dimension === $level) {
+            foreach ($data as $i => $value) {
+                if ($value instanceof $class) {
+                    $link[] = $value;
+                } else {
+                    try {
+                        $link[] = (new (($v = (array)$value)[self::TYPE])($v[self::DATA]));
+                    } catch (V\ValidationExceptions $e) {
+                        $this->setException($key, $exceptions, $e, [...$indexes, $i]);
+                    }
+                }
+            }
+        } else {
+            foreach ($data as $i => $value) {
+                $this->fromAbstracts($key, $value, $link[$i], $dimension, [...$indexes, $i], $exceptions, $level + 1, $class);
+            }
+        }
+    }
+
     protected function fromBackedEnums(array $data, ?array &$link, int $dimension, int $level, string $class): void
     {
         if ($dimension === $level) {
@@ -575,6 +632,20 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 $link[] = $value->toArray();
             } else {
                 $this->toDtos($link[$i], $value ?? []);
+            }
+        }
+    }
+
+    protected function toAbstracts(?array &$link, mixed $data): void
+    {
+        foreach ($data as $i => $value) {
+            if ($value instanceof UnpackableInterface) {
+                $link[] = [
+                    self::TYPE => $value::class,
+                    self::DATA => $value->toArray(),
+                ];
+            } else {
+                $this->toAbstracts($link[$i], $value ?? []);
             }
         }
     }
@@ -682,7 +753,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 } elseif ($dt = self::DATETIME_CLASSES[$type] ?? false) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DATETIME, $dt, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DATETIME;
-                } elseif (($variableType = new \ReflectionClass($type))->implementsInterface(PackableInterface::class)) {
+                } elseif (($variableType = new \ReflectionClass($type))->isSubclassOf(self::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DTO, $type, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DTO;
                 } elseif ($variableType->implementsInterface(\BackedEnum::class)) {
@@ -691,6 +762,9 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 } elseif ($variableType->implementsInterface(\UnitEnum::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_UNIT_ENUM, $type, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_UNIT_ENUM;
+                } elseif ($variableType->implementsInterface(DtoInterface::class)) {
+                    $_cache[self::HANDLERS_FROM][$key] = [self::FROM_ABSTRACT, null, 0];
+                    $_cache[self::HANDLERS_TO][$key] = self::TO_ABSTRACT;
                 }
             } elseif ($reflectionType instanceof \ReflectionUnionType) {
                 $reflectionTypes = $reflectionType->getTypes();
@@ -721,7 +795,7 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 } elseif ($dt = self::DATETIME_CLASSES[$type] ?? false) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DATETIMES, $dt, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DATETIMES;
-                } elseif (($variableType = new \ReflectionClass($type))->implementsInterface(PackableInterface::class)) {
+                } elseif (($variableType = new \ReflectionClass($type))->isSubclassOf(self::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DTOS, $type, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DTOS;
                 } elseif ($variableType->implementsInterface(\BackedEnum::class)) {
@@ -730,6 +804,9 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 } elseif ($variableType->implementsInterface(\UnitEnum::class)) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_UNIT_ENUMS, $type, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_UNIT_ENUMS;
+                } elseif ($variableType->implementsInterface(PackableInterface::class)) {
+                    $_cache[self::HANDLERS_FROM][$key] = [self::FROM_ABSTRACTS, $type, $dimension];
+                    $_cache[self::HANDLERS_TO][$key] = self::TO_ABSTRACTS;
                 } else {
                     throw new \RuntimeException(static::class . "::$key unhandled type: $type");
                 }

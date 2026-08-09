@@ -24,6 +24,7 @@ composer require perfilov/php-dto-packer
 - [Mutators](#mutators)
 - [Validators](#validators)
 - [Dimension](#dimension)
+- [Benchmark](#benchmark)
 
 # Quick Example
 ```php

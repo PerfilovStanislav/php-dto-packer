@@ -132,4 +132,6 @@ class SuccessDto extends AbstractDto
     protected array|SuccessDto $dtos;
     #[Dimension(2)]
     protected array|SuccessDto $dtos2;
+
+    protected AbstractDto $abstract_dto;
 }
