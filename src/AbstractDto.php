@@ -753,7 +753,9 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 } elseif ($dt = self::DATETIME_CLASSES[$type] ?? false) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DATETIME, $dt, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DATETIME;
-                } elseif (($variableType = new \ReflectionClass($type))->isSubclassOf(self::class)) {
+                } elseif (($variableType = new \ReflectionClass($type))->isSubclassOf(self::class)
+                    && $variableType->isAbstract() === false
+                ) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DTO, $type, 0];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DTO;
                 } elseif ($variableType->implementsInterface(\BackedEnum::class)) {
@@ -795,7 +797,9 @@ abstract class AbstractDto implements DtoInterface, \JsonSerializable, \Stringab
                 } elseif ($dt = self::DATETIME_CLASSES[$type] ?? false) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DATETIMES, $dt, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DATETIMES;
-                } elseif (($variableType = new \ReflectionClass($type))->isSubclassOf(self::class)) {
+                } elseif (($variableType = new \ReflectionClass($type))->isSubclassOf(self::class)
+                    && $variableType->isAbstract() === false
+                ) {
                     $_cache[self::HANDLERS_FROM][$key] = [self::FROM_DTOS, $type, $dimension];
                     $_cache[self::HANDLERS_TO][$key] = self::TO_DTOS;
                 } elseif ($variableType->implementsInterface(\BackedEnum::class)) {
